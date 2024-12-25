@@ -25,6 +25,7 @@ pool.connect()
   .then(() => {
     console.log('Connected to PostgreSQL');
     createTableIfNotExists();  // Create the table if it doesn't exist
+    insertSampleData();        // Insert sample data into the table
   })
   .catch(err => {
     console.error('Error connecting to PostgreSQL:', err);
@@ -45,6 +46,27 @@ async function createTableIfNotExists() {
     console.log('Users table created or already exists');
   } catch (err) {
     console.error('Error creating users table:', err);
+  }
+}
+
+// Function to insert sample data into the 'users' table
+async function insertSampleData() {
+  const sampleUsers = [
+    { name: 'John Doe', email: 'john@example.com' },
+    { name: 'Jane Smith', email: 'jane@example.com' },
+    { name: 'Alice Johnson', email: 'alice@example.com' },
+  ];
+
+  for (const user of sampleUsers) {
+    try {
+      const result = await pool.query(
+        'INSERT INTO users (name, email) VALUES ($1, $2) RETURNING *',
+        [user.name, user.email]
+      );
+      console.log(`Inserted user: ${result.rows[0].name}`);
+    } catch (err) {
+      console.error('Error inserting user:', err);
+    }
   }
 }
 
