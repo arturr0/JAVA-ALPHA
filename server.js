@@ -12,6 +12,9 @@ const pool = new Pool({
   database: process.env.DB_NAME,        // Your database name
   password: process.env.DB_PASSWORD,    // Your database password
   port: process.env.DB_PORT || 5432,    // Default to 5432 if DB_PORT is not set
+  ssl: {
+    rejectUnauthorized: false           // Allow self-signed certificates (optional, depends on your setup)
+  }
 });
 
 // Test the database connection
