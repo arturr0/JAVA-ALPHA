@@ -22,11 +22,38 @@ const pool = new Pool({
 
 // Test the database connection
 pool.connect()
-  .then(() => console.log('Connected to PostgreSQL'))
+  .then(() => {
+    console.log('Connected to PostgreSQL');
+    // Automatically insert data when the server starts
+    insertInitialData();
+  })
   .catch(err => {
     console.error('Error connecting to PostgreSQL:', err);
     process.exit(1);  // Exit if unable to connect to the database
   });
+
+// Function to automatically insert some data into the 'users' table
+async function insertInitialData() {
+  try {
+    // Predefined user data to insert
+    const users = [
+      { name: 'John Doe', email: 'john.doe@example.com' },
+      { name: 'Jane Smith', email: 'jane.smith@example.com' },
+      { name: 'Alice Johnson', email: 'alice.johnson@example.com' }
+    ];
+
+    // Insert each user into the 'users' table
+    for (let user of users) {
+      const result = await pool.query(
+        'INSERT INTO users (name, email) VALUES ($1, $2) RETURNING *',
+        [user.name, user.email]
+      );
+      console.log(`Inserted user: ${result.rows[0].name}`);
+    }
+  } catch (err) {
+    console.error('Error inserting data:', err);
+  }
+}
 
 // Example route to insert a new user into the database
 app.post('/add-user', async (req, res) => {
