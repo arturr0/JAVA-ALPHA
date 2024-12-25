@@ -1,17 +1,17 @@
 const express = require('express');
 const { Pool } = require('pg');
-require('dotenv').config(); // Load environment variables from .env
+require('dotenv').config(); // To load the .env file with environment variables
 
 const app = express();
-const port = process.env.PORT || 3000;  // Use Render's assigned port or default to 3000
+const port = process.env.PORT || 10000;  // Use Render's assigned port or default to 10000
 
 // PostgreSQL connection setup using environment variables
 const pool = new Pool({
-  user: process.env.DB_USER,
-  host: process.env.DB_HOST,
-  database: process.env.DB_NAME,
-  password: process.env.DB_PASSWORD,
-  port: process.env.DB_PORT || 5432,  // Default to 5432 if DB_PORT is not set
+  user: process.env.DB_USER,            // Your database username
+  host: process.env.DB_HOST,            // Your external database host
+  database: process.env.DB_NAME,        // Your database name
+  password: process.env.DB_PASSWORD,    // Your database password
+  port: process.env.DB_PORT || 5432,    // Default to 5432 if DB_PORT is not set
 });
 
 // Test the database connection
