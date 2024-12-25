@@ -5,6 +5,9 @@ require('dotenv').config(); // To load the .env file with environment variables
 const app = express();
 const port = process.env.PORT || 10000;  // Use Render's assigned port or default to 10000
 
+// Middleware to parse JSON data in requests
+app.use(express.json());
+
 // PostgreSQL connection setup using environment variables
 const pool = new Pool({
   user: process.env.DB_USER,            // Your database username
@@ -25,15 +28,32 @@ pool.connect()
     process.exit(1);  // Exit if unable to connect to the database
   });
 
-// Define a route to check if the server is working
-app.get('/', (req, res) => {
-  res.send('Server is running!');
+// Example route to insert a new user into the database
+app.post('/add-user', async (req, res) => {
+  const { name, email } = req.body; // Get user data from request body
+
+  try {
+    // Insert user into the 'users' table
+    const result = await pool.query(
+      'INSERT INTO users (name, email) VALUES ($1, $2) RETURNING *',
+      [name, email]
+    );
+    
+    // Return the inserted user data as a response
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error('Error inserting user:', err);
+    res.status(500).send('Server error');
+  }
 });
 
-// Example route to get data from PostgreSQL
+// Example route to get all users from the database
 app.get('/users', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM users'); // Replace with your actual query
+    // Fetch all users from the 'users' table
+    const result = await pool.query('SELECT * FROM users');
+    
+    // Return users as a response
     res.json(result.rows);
   } catch (err) {
     console.error('Error fetching users:', err);
