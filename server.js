@@ -4,7 +4,7 @@ require('dotenv').config();
 
 const app = express();
 
-// Use the PORT environment variable from Render, or default to 3000 for local testing
+// Make sure to use the PORT environment variable (or default to 3000 for local testing)
 const port = process.env.PORT || 3000;
 
 // PostgreSQL connection pool setup
