@@ -1,40 +1,34 @@
 const express = require('express');
 const { Pool } = require('pg');
-require('dotenv').config(); // To load the .env file with environment variables
+require('dotenv').config(); // Load .env file
 
 const app = express();
-const port = process.env.PORT || 10000;  // Use Render's assigned port or default to 10000
+const port = process.env.PORT || 10000;
 
-// Middleware to parse JSON data in requests
 app.use(express.json());
 
-// PostgreSQL connection setup using environment variables
 const pool = new Pool({
-  user: process.env.DB_USER,            // Your database username
-  host: process.env.DB_HOST,            // Your external database host
-  database: process.env.DB_NAME,        // Your database name
-  password: process.env.DB_PASSWORD,    // Your database password
-  port: process.env.DB_PORT || 5432,    // Default to 5432 if DB_PORT is not set
-  ssl: {
-    rejectUnauthorized: false           // Allow self-signed certificates (optional, depends on your setup)
-  }
+  user: process.env.DB_USER,
+  host: process.env.DB_HOST,
+  database: process.env.DB_NAME,
+  password: process.env.DB_PASSWORD,
+  port: process.env.DB_PORT || 5432,
+  ssl: { rejectUnauthorized: false },
 });
 
-// Test the database connection and create table if it doesn't exist
 pool.connect()
   .then(() => {
     console.log('Connected to PostgreSQL');
-    createTableIfNotExists();  // Create the table if it doesn't exist
-    insertSampleData();        // Insert sample data into the table
+    createTableIfNotExists();
+    insertSampleData();
   })
   .catch(err => {
-    console.error('Error connecting to PostgreSQL:', err);
-    process.exit(1);  // Exit if unable to connect to the database
+    console.error('Database connection error:', err);
+    process.exit(1);
   });
 
-// Function to create the 'users' table if it doesn't exist
 async function createTableIfNotExists() {
-  const createTableQuery = `
+  const query = `
     CREATE TABLE IF NOT EXISTS users (
       id SERIAL PRIMARY KEY,
       name VARCHAR(100),
@@ -42,68 +36,39 @@ async function createTableIfNotExists() {
     );
   `;
   try {
-    await pool.query(createTableQuery);  // Create the table
-    console.log('Users table created or already exists');
+    await pool.query(query);
+    console.log('Table ready');
   } catch (err) {
-    console.error('Error creating users table:', err);
+    console.error('Error creating table:', err);
   }
 }
 
-// Function to insert sample data into the 'users' table
 async function insertSampleData() {
-  const sampleUsers = [
+  const users = [
     { name: 'John Doe', email: 'john@example.com' },
     { name: 'Jane Smith', email: 'jane@example.com' },
     { name: 'Alice Johnson', email: 'alice@example.com' },
   ];
-
-  for (const user of sampleUsers) {
+  for (const user of users) {
     try {
-      const result = await pool.query(
-        'INSERT INTO users (name, email) VALUES ($1, $2) RETURNING *',
-        [user.name, user.email]
-      );
-      console.log(`Inserted user: ${result.rows[0].name}`);
+      await pool.query('INSERT INTO users (name, email) VALUES ($1, $2) ON CONFLICT DO NOTHING', [user.name, user.email]);
     } catch (err) {
-      console.error('Error inserting user:', err);
+      console.error('Error inserting sample data:', err);
     }
   }
 }
 
-// Example route to insert a new user into the database
 app.post('/add-user', async (req, res) => {
-  const { name, email } = req.body; // Get user data from request body
-
+  const { name, email } = req.body;
   try {
-    // Insert user into the 'users' table
-    const result = await pool.query(
-      'INSERT INTO users (name, email) VALUES ($1, $2) RETURNING *',
-      [name, email]
-    );
-    
-    // Return the inserted user data as a response
+    const result = await pool.query('INSERT INTO users (name, email) VALUES ($1, $2) RETURNING *', [name, email]);
     res.status(201).json(result.rows[0]);
   } catch (err) {
-    console.error('Error inserting user:', err);
+    console.error('Insert error:', err);
     res.status(500).send('Server error');
   }
 });
 
-// Example route to get all users from the database
-app.get('/users', async (req, res) => {
-  try {
-    // Fetch all users from the 'users' table
-    const result = await pool.query('SELECT * FROM users');
-    
-    // Return users as a response
-    res.json(result.rows);
-  } catch (err) {
-    console.error('Error fetching users:', err);
-    res.status(500).send('Server error');
-  }
-});
-
-// Start the server
 app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
+  console.log(`Server running on port ${port}`);
 });
