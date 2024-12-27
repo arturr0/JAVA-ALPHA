@@ -68,7 +68,18 @@ app.post('/add-user', async (req, res) => {
     res.status(500).send('Server error');
   }
 });
-
+app.get('/users', async (req, res) => {
+  try {
+    // Fetch all users from the 'users' table
+    const result = await pool.query('SELECT * FROM users');
+    
+    // Return users as a response
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching users:', err);
+    res.status(500).send('Server error');
+  }
+});
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
